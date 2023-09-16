@@ -15,54 +15,27 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-                // Use the WebViewLayout composable within your app's content.
-                WebViewLayout(modifier = Modifier.fillMaxSize())
+            WebViewLayout()
         }
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun WebViewLayout(modifier: Modifier) {
+fun WebViewLayout() {
     var popUpVisible by remember { mutableStateOf(false) }
     var hitCount by remember { mutableStateOf(0) }
 
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val density = LocalDensity.current.density
 
-    // Define the pop-up content
-    val popUpContent: @Composable () -> Unit = {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .background(Color.White)
-        ) {
-            Text(
-                text = "Pop-up Content",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Button(
-                onClick = {
-                    popUpVisible = false
-                    keyboardController?.hide()
-                },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text(text = "Close")
-            }
-        }
-    }
+    // Calculate the threshold value based on density
+    val density = LocalDensity.current.density
+    val topLeftCornerThreshold = (48.dp * density)// Adjust this threshold as needed
+
 
     Column(
         modifier = Modifier
@@ -76,9 +49,16 @@ fun WebViewLayout(modifier: Modifier) {
                 .background(Color.Gray)
                 .pointerInput(Unit) {
                     detectTapGestures { offset ->
-                        hitCount++
-                        if (hitCount >= 5) {
-                            popUpVisible = true
+                        // Check if the click is in the top-left corner
+                        val x = offset.x
+                        val y = offset.y
+                        val isClickInTopLeftCorner = (x <= topLeftCornerThreshold.value) && (y <= topLeftCornerThreshold.value)
+
+                        if (isClickInTopLeftCorner) {
+                            hitCount++
+                            if (hitCount >= 5) {
+                                popUpVisible = true
+                            }
                         }
                     }
                 },
@@ -107,6 +87,7 @@ fun WebViewLayout(modifier: Modifier) {
                         // Implement action for the HOME button here
                         hitCount = 0 // Reset hitCount to 0
                     },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(text = "HOME Button")
                 }
