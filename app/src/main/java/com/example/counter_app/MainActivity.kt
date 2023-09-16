@@ -16,6 +16,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,14 +88,20 @@ fun WebViewLayout() {
                     .weight(1f)
                     .padding(end = 16.dp)
             ) {
-                Button(
+                IconButton(
                     onClick = {
-                        // Implement action for the HOME button here
-                        hitCount = 0 // Reset hitCount to 0
+                        hitCount = 0 
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color.Blue) 
+                        .padding(8.dp) 
+                        .align(Alignment.TopStart)
                 ) {
-                    Text(text = "HOME Button")
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Home"
+                    )
                 }
             }
 
