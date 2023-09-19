@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -17,10 +18,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.ui.tooling.preview.Preview
 
 
 class MainActivity : ComponentActivity() {
@@ -75,6 +78,28 @@ fun WebViewLayout() {
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                IconButton(
+                    onClick = {
+                        hitCount = 0
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .padding(8.dp)
+                        .align(Alignment.BottomStart)
+                        .border(1.dp, Color.White, CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Home"
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -83,27 +108,6 @@ fun WebViewLayout() {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 16.dp)
-            ) {
-                IconButton(
-                    onClick = {
-                        hitCount = 0 
-                    },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(Color.Blue) 
-                        .padding(8.dp) 
-                        .align(Alignment.TopStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Home,
-                        contentDescription = "Home"
-                    )
-                }
-            }
 
             // Hidden button that triggers the pop-up
             Button(
@@ -142,4 +146,10 @@ fun WebViewLayout() {
             }
         )
     }
+}
+
+@Preview
+@Composable
+fun PreviewWebViewLayout(){
+    WebViewLayout()
 }
