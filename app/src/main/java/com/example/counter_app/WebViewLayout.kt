@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,15 +37,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 enum class ScrollDirection {
-    UP,DOWN
+    UP, DOWN, STAY
 }
 
 @Composable
 fun WebViewLayout() {
     var popUpVisible by remember { mutableStateOf(false) }
     var hitCount by remember { mutableStateOf(0) }
+
+    var isHomeVisible by remember { mutableStateOf(true) }
+
+    var scrollDirection by remember { mutableStateOf(ScrollDirection.STAY) }
+    var remainingTime by remember { mutableStateOf(5) }
+    var isTimerRunning by remember { mutableStateOf(false) }
+
+    LaunchedEffect(remainingTime, isTimerRunning) {
+        while (remainingTime >= 0 && isTimerRunning) {
+            if (remainingTime <= 0) {
+                isTimerRunning = false
+                isHomeVisible = true
+            }
+            delay(1000)
+            remainingTime--
+            Log.d("Timer", "Timer $remainingTime | $isTimerRunning")
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -57,26 +77,33 @@ fun WebViewLayout() {
                 .weight(1f)
                 .background(Color.Gray)
                 .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        val swipeDirection = when {
-                            dragAmount.y > 0f -> ScrollDirection.UP
-                            dragAmount.y < 0f -> ScrollDirection.DOWN
-                            else -> null
+                    //Scroll Detection
+                    detectDragGestures(
+                        onDragEnd = {
+                            //Timer will start after user release the touch screen
+                            isTimerRunning = true
+                            remainingTime = 5
+                        },
+                        onDrag = { _, dragAmount ->
+                            scrollDirection = when {
+                                dragAmount.y > 0f -> ScrollDirection.UP
+                                dragAmount.y < 0f -> ScrollDirection.DOWN
+                                else -> ScrollDirection.STAY
+                            }
+                            Log.d("scroll_direction", scrollDirection.name)
+                            //Home button will be hided if there is any scrolling gesture
+                            if(scrollDirection != ScrollDirection.STAY) {
+                                isHomeVisible = false
+                            }
                         }
-
-                        // Perform the appropriate action based on the swipe direction
-                        if (swipeDirection != null) {
-                            Log.d("Ajib", "Direction ${swipeDirection.name}")
-                        }
-                    }
-                }
-            ,
+                    )
+                },
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .size(50.dp,50.dp)
+                    .size(48.dp, 48.dp)
                     .pointerInput(Unit) {
                         detectTapGestures {
                             hitCount++
@@ -93,25 +120,27 @@ fun WebViewLayout() {
                 fontWeight = FontWeight.Bold
             )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                IconButton(
-                    onClick = {
-                        hitCount = 0
-                    },
+            if(isHomeVisible) {
+                Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .padding(8.dp)
-                        .align(Alignment.BottomStart)
-                        .border(1.dp, Color.White, CircleShape)
+                        .fillMaxSize()
+                        .padding(16.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Home,
-                        contentDescription = "Home"
-                    )
+                    IconButton(
+                        onClick = {
+                            hitCount = 0
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .padding(8.dp)
+                            .align(Alignment.BottomStart)
+                            .border(1.dp, Color.White, CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Home",
+                        )
+                    }
                 }
             }
         }
@@ -164,6 +193,6 @@ fun WebViewLayout() {
 
 @Preview
 @Composable
-fun Test(){
+fun Test() {
     WebViewLayout()
 }
