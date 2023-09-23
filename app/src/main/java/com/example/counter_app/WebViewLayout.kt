@@ -1,6 +1,13 @@
 package com.example.counter_app
 
-import android.util.Log
+import android.annotation.SuppressLint
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -36,40 +43,32 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalDensity
 
 enum class ScrollDirection {
-    UP, DOWN, STAY
+    UP,
+    DOWN,
+    STAY
 }
+
+const val homePage = "https://developer.android.com/jetpack/compose/state?hl=en"
 
 @Composable
 fun WebViewLayout() {
     var popUpVisible by remember { mutableStateOf(false) }
     var hitCount by remember { mutableStateOf(0) }
-
-    var isHomeVisible by remember { mutableStateOf(true) }
-
     var scrollDirection by remember { mutableStateOf(ScrollDirection.STAY) }
+    var isHomeVisible by remember { mutableStateOf(true) }
+    var lastTapTimestamp by remember { mutableStateOf(0L) }
+    var isTimerRunning by remember { mutableStateOf(false) }    
     var remainingTime by remember { mutableStateOf(5) }
-    var isTimerRunning by remember { mutableStateOf(false) }
-
-    LaunchedEffect(remainingTime, isTimerRunning) {
-        while (remainingTime >= 0 && isTimerRunning) {
-            if (remainingTime <= 0) {
-                isTimerRunning = false
-                isHomeVisible = true
-            }
-            delay(1000)
-            remainingTime--
-            Log.d("Timer", "Timer $remainingTime | $isTimerRunning")
-        }
-    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
     ) {
         Box(
             modifier = Modifier
@@ -77,10 +76,9 @@ fun WebViewLayout() {
                 .weight(1f)
                 .background(Color.Gray)
                 .pointerInput(Unit) {
-                    //Scroll Detection
+                    // Scroll Detection
                     detectDragGestures(
                         onDragEnd = {
-                            //Timer will start after user release the touch screen
                             isTimerRunning = true
                             remainingTime = 5
                         },
@@ -90,65 +88,56 @@ fun WebViewLayout() {
                                 dragAmount.y < 0f -> ScrollDirection.DOWN
                                 else -> ScrollDirection.STAY
                             }
-                            Log.d("scroll_direction", scrollDirection.name)
-                            //Home button will be hided if there is any scrolling gesture
-                            if(scrollDirection != ScrollDirection.STAY) {
-                                isHomeVisible = false
-                            }
                         }
                     )
+
+                    // Tap Detection
+                    detectTapGestures { offset ->
+                        val cornerSize = 48.dp.toPx()
+                        val tapX = offset.x
+                        val tapY = offset.y
+
+                        if (tapX <= cornerSize && tapY <= cornerSize) {
+                            val currentTime = System.currentTimeMillis()
+                            if (currentTime - lastTapTimestamp < 500) {
+                                hitCount++
+                                if (hitCount >= 5) {
+                                    popUpVisible = true
+                                    hitCount = 0 // Reset the hit count
+                                }
+                            } else {
+                                hitCount = 1
+                            }
+                            lastTapTimestamp = currentTime
+                        } else {
+                            hitCount = 0
+                        }
+                    }
                 },
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .size(48.dp, 48.dp)
-                    .pointerInput(Unit) {
-                        detectTapGestures {
-                            hitCount++
-                            if (hitCount >= 5) {
-                                popUpVisible = true
-                            }
-                        }
-                    }
-            )
-
-            Text(
-                text = if (hitCount < 5) "Hit $hitCount times to show pop-up" else "WEBVIEW",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            if(isHomeVisible) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
+                    .fillMaxSize()
+            ) {
+                // Show a webView
+                WebViewComponent(
+                    url = homePage
                 ) {
-                    IconButton(
-                        onClick = {
-                            hitCount = 0
-                        },
-                        modifier = Modifier
-                            .size(48.dp)
-                            .padding(8.dp)
-                            .align(Alignment.BottomStart)
-                            .border(1.dp, Color.White, CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Home",
-                        )
-                    }
+                    isHomeVisible = it
                 }
             }
+
+            HomeFab(
+                modifier = Modifier,
+                isVisibleBecauseOfScrolling = isHomeVisible
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().background(Color.LightGray),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
@@ -188,6 +177,76 @@ fun WebViewLayout() {
                 }
             }
         )
+    }
+}
+
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+private fun WebViewComponent(
+    url: String,
+    isHomeVisible: (Boolean) -> Unit
+) {
+    var webView: WebView? = null
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(scrollState.value) {
+        val isHomeFabVisible = scrollState.value == 0
+        isHomeVisible.invoke(isHomeFabVisible)
+    }
+
+    AndroidView(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+        ,
+        factory = { context ->
+            WebView(context).apply {
+                webViewClient = WebViewClient()
+                loadUrl(url)
+                settings.javaScriptEnabled = true
+                webView = this
+            }
+        }
+    )
+}
+
+@Composable
+private fun HomeFab(
+    modifier: Modifier,
+    isVisibleBecauseOfScrolling: Boolean,
+) {
+    val density = LocalDensity.current
+    AnimatedVisibility(
+        modifier = modifier,
+        visible = isVisibleBecauseOfScrolling,
+        enter = slideInVertically {
+            with(density) { 40.dp.roundToPx() }
+        } + fadeIn(),
+        exit = fadeOut(
+            animationSpec = keyframes {
+                this.durationMillis = 120
+            }
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            IconButton(
+                onClick = {},
+                modifier = Modifier
+                    .size(48.dp)
+                    .padding(8.dp)
+                    .align(Alignment.BottomStart)
+                    .border(1.dp, Color.White, CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Home,
+                    contentDescription = "Home",
+                )
+            }
+        }
     }
 }
 
