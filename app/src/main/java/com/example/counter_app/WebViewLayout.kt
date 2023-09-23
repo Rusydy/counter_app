@@ -1,6 +1,9 @@
 package com.example.counter_app
 
+import android.annotation.SuppressLint
 import android.util.Log
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -15,7 +18,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
@@ -37,11 +42,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
 
-enum class ScrollDirection {
-    UP, DOWN, STAY
-}
+const val homePage = "https://developer.android.com/jetpack/compose/state?hl=en"
 
 @Composable
 fun WebViewLayout() {
@@ -50,60 +54,24 @@ fun WebViewLayout() {
 
     var isHomeVisible by remember { mutableStateOf(true) }
 
-    var scrollDirection by remember { mutableStateOf(ScrollDirection.STAY) }
-    var remainingTime by remember { mutableStateOf(5) }
-    var isTimerRunning by remember { mutableStateOf(false) }
-
-    LaunchedEffect(remainingTime, isTimerRunning) {
-        while (remainingTime >= 0 && isTimerRunning) {
-            if (remainingTime <= 0) {
-                isTimerRunning = false
-                isHomeVisible = true
-            }
-            delay(1000)
-            remainingTime--
-            Log.d("Timer", "Timer $remainingTime | $isTimerRunning")
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .background(Color.Gray)
-                .pointerInput(Unit) {
-                    //Scroll Detection
-                    detectDragGestures(
-                        onDragEnd = {
-                            //Timer will start after user release the touch screen
-                            isTimerRunning = true
-                            remainingTime = 5
-                        },
-                        onDrag = { _, dragAmount ->
-                            scrollDirection = when {
-                                dragAmount.y > 0f -> ScrollDirection.UP
-                                dragAmount.y < 0f -> ScrollDirection.DOWN
-                                else -> ScrollDirection.STAY
-                            }
-                            Log.d("scroll_direction", scrollDirection.name)
-                            //Home button will be hided if there is any scrolling gesture
-                            if(scrollDirection != ScrollDirection.STAY) {
-                                isHomeVisible = false
-                            }
-                        }
-                    )
-                },
+                .background(Color.Transparent),
+                // TODO: adjust the .pointerInput to detect the scroll gesture and hide the home button
+                
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .size(48.dp, 48.dp)
+                    .border(8.dp, Color.Red)
                     .pointerInput(Unit) {
                         detectTapGestures {
                             hitCount++
@@ -114,11 +82,13 @@ fun WebViewLayout() {
                     }
             )
 
-            Text(
-                text = if (hitCount < 5) "Hit $hitCount times to show pop-up" else "WEBVIEW",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp, 8.dp, 8.dp, 0.dp)
+            ) {
+                WebViewComponent(homePage)
+            }
 
             if(isHomeVisible) {
                 Box(
@@ -189,6 +159,27 @@ fun WebViewLayout() {
             }
         )
     }
+}
+
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+private fun WebViewComponent(
+    url: String
+) {
+    val scrollState = rememberScrollState()
+
+    AndroidView(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState),
+        factory = { context ->
+            WebView(context).apply {
+                webViewClient = WebViewClient()
+                loadUrl(url)
+                settings.javaScriptEnabled = true
+            }
+        }
+    )
 }
 
 @Preview
