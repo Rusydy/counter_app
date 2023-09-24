@@ -1,12 +1,10 @@
 package com.example.counter_app
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,11 +38,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import kotlinx.coroutines.delay
 
-const val homePage = "https://developer.android.com/jetpack/compose/state?hl=en"
+const val homePageUrl = "https://developer.android.com/jetpack/compose/state?hl=en"
 
 @Composable
 fun WebViewLayout() {
@@ -54,6 +49,9 @@ fun WebViewLayout() {
 
     // TODO: Implement this on CA-2
     var isHomeVisible by remember { mutableStateOf(true) }
+
+    // Reference to the WebView component
+    var webView: WebView? = null
 
     Column(
         modifier = Modifier
@@ -87,10 +85,13 @@ fun WebViewLayout() {
                     .fillMaxSize()
                     .padding(8.dp, 8.dp, 8.dp, 0.dp)
             ) {
-                WebViewComponent(homePage)
+                // Pass a reference to the WebView
+                WebViewComponent(homePageUrl) { webViewInstance ->
+                    webView = webViewInstance
+                }
             }
 
-            if(isHomeVisible) {
+            if (isHomeVisible) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -99,6 +100,7 @@ fun WebViewLayout() {
                     IconButton(
                         onClick = {
                             hitCount = 0
+                            webView?.loadUrl(homePageUrl) // Load the home page URL
                         },
                         modifier = Modifier
                             .size(48.dp)
@@ -164,7 +166,8 @@ fun WebViewLayout() {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 private fun WebViewComponent(
-    url: String
+    url: String,
+    onWebViewReady: (WebView) -> Unit
 ) {
     val scrollState = rememberScrollState()
 
@@ -177,6 +180,7 @@ private fun WebViewComponent(
                 webViewClient = WebViewClient()
                 loadUrl(url)
                 settings.javaScriptEnabled = true
+                onWebViewReady(this) // Pass the WebView instance
             }
         }
     )
