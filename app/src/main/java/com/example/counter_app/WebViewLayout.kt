@@ -52,6 +52,7 @@ fun WebViewLayout() {
     var popUpVisible by remember { mutableStateOf(false) }
     var hitCount by remember { mutableStateOf(0) }
 
+    // TODO: Implement this on CA-2
     var isHomeVisible by remember { mutableStateOf(true) }
 
     Column(
@@ -63,8 +64,7 @@ fun WebViewLayout() {
                 .fillMaxWidth()
                 .weight(1f)
                 .background(Color.Transparent),
-                // TODO: adjust the .pointerInput to detect the scroll gesture and hide the home button
-                
+                // TODO: adjust the .pointerInput to detect the scroll gesture and hide the home button on CA-2
             contentAlignment = Alignment.Center
         ) {
             Box(
@@ -121,7 +121,7 @@ fun WebViewLayout() {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-
+            // TODO: Fix this button on CA-2
             // Hidden button that triggers the pop-up
             Button(
                 onClick = {
