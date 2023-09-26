@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -42,7 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 
-const val homePageUrl = "http://103.41.207.234/"
+const val homePageUrl = "https://cms.liharsw.dev/demo.html"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +75,7 @@ fun WebViewLayout() {
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .size(48.dp, 48.dp)
-                    .border(8.dp, Color.Red)
+                    .border(8.dp, Color.Transparent)
                     .pointerInput(Unit) {
                         detectTapGestures {
                             hitCount++
@@ -207,8 +208,26 @@ private fun WebViewComponent(
     )
 }
 
+@Composable
+fun ForceResizeContent(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .aspectRatio(9f / 16f)
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun OptimizedAppLayout() {
+    ForceResizeContent {
+        WebViewLayout()
+    }
+}
+
 @Preview
 @Composable
 fun Test() {
-    WebViewLayout()
+    OptimizedAppLayout()
 }
