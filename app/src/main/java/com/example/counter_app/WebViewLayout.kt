@@ -23,9 +23,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,12 +42,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 
-const val homePageUrl = "https://developer.android.com/jetpack/compose/state?hl=en"
+const val homePageUrl = "http://103.41.207.234/"
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WebViewLayout() {
     var popUpVisible by remember { mutableStateOf(false) }
     var hitCount by remember { mutableStateOf(0) }
+
+    var tokenText by remember { mutableStateOf("") } // Create a mutableState for the token text
 
     // TODO: Implement this on CA-2
     var isHomeVisible by remember { mutableStateOf(true) }
@@ -148,15 +153,31 @@ fun WebViewLayout() {
                 Text(text = "Pop-up Content", fontWeight = FontWeight.Bold)
             },
             text = {
-                Text(text = "This is your pop-up content.")
+                Column {
+                    Text(text = "This is your pop-up content.")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // TextField for entering the token
+                    TextField(
+                        value = tokenText,
+                        onValueChange = { newValue ->
+                            tokenText = newValue
+                        },
+                        label = { Text("Enter Token") }
+                    )
+                }
             },
+
             confirmButton = {
                 Button(
                     onClick = {
+                        hitCount = 0
                         popUpVisible = false
+                        val enteredToken = tokenText // Get the entered token here
+                        // TODO: implement Dynamic WebView Content Based on enteredToken
                     }
                 ) {
-                    Text(text = "Close")
+                    Text(text = "SUBMIT")
                 }
             }
         )
