@@ -202,6 +202,7 @@ private fun WebViewComponent(
                 webViewClient = WebViewClient()
                 loadUrl(url)
                 settings.javaScriptEnabled = true
+                settings.mediaPlaybackRequiresUserGesture = false
                 onWebViewReady(this) // Pass the WebView instance
             }
         }
