@@ -43,7 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 
-const val homePageUrl = "https://cms.liharsw.dev/demo.html"
+const val homePageUrl = "https://cms.liharsw.dev/layout/1"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,28 +73,28 @@ fun WebViewLayout() {
         ) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .size(48.dp, 48.dp)
-                    .border(8.dp, Color.Transparent)
-                    .pointerInput(Unit) {
-                        detectTapGestures {
-                            hitCount++
-                            if (hitCount >= 5) {
-                                popUpVisible = true
-                            }
-                        }
-                    }
-            )
-
-            Box(
-                modifier = Modifier
                     .fillMaxSize()
-                    .padding(8.dp, 8.dp, 8.dp, 0.dp)
             ) {
+
                 // Pass a reference to the WebView
                 WebViewComponent(homePageUrl) { webViewInstance ->
                     webView = webViewInstance
                 }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .size(48.dp, 48.dp)
+                        .border(8.dp, Color.Transparent)
+                        .pointerInput(Unit) {
+                            detectTapGestures {
+                                hitCount++
+                                if (hitCount >= 5) {
+                                    popUpVisible = true
+                                }
+                            }
+                        }
+                )
             }
 
             if (isHomeVisible) {
@@ -110,7 +110,6 @@ fun WebViewLayout() {
                         },
                         modifier = Modifier
                             .size(48.dp)
-                            .padding(8.dp)
                             .align(Alignment.BottomStart)
                             .border(1.dp, Color.White, CircleShape)
                     ) {
