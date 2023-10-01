@@ -1,6 +1,7 @@
 package com.example.counter_app
 
 import android.os.Bundle
+import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -17,16 +18,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        setAppImmersiveMode()
 
         setContent {
             OptimizedAppLayout()
         }
     }
+
+    private fun setAppImmersiveMode() {
+        window.decorView.systemUiVisibility =
+            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN
+    }
 }
 
 @Preview
 @Composable
-fun PreviewWebViewLayout(){
+fun PreviewWebViewLayout() {
     OptimizedAppLayout()
 }
