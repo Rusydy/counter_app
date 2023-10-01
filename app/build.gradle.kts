@@ -71,4 +71,7 @@ dependencies {
     implementation("androidx.ui:ui-tooling:0.1.0-dev15")
     implementation("androidx.compose.runtime:runtime-livedata:1.0.0")
     implementation("androidx.compose.material:material-icons-core:1.0.0")
+
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.19.0")
+    implementation("androidx.core:core-ktx:1.7.0")
 }

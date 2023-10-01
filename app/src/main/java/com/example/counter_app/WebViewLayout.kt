@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -42,12 +44,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
-const val homePageUrl = "https://cms.liharsw.dev/layout/1"
+const val homePageUrl = "https://detik.com"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WebViewLayout() {
+    val systemUiController = rememberSystemUiController()
+    systemUiController.isSystemBarsVisible = false // Status & Navigation bars
+    systemUiController.navigationBarDarkContentEnabled = true
+
     var popUpVisible by remember { mutableStateOf(false) }
     var hitCount by remember { mutableStateOf(0) }
 
@@ -163,6 +170,7 @@ fun WebViewLayout() {
                         onValueChange = { newValue ->
                             tokenText = newValue
                         },
+                        modifier = Modifier.fillMaxWidth().imePadding(),
                         label = { Text("Enter Token") }
                     )
                 }
@@ -195,7 +203,8 @@ private fun WebViewComponent(
     AndroidView(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(scrollState),
+            .verticalScroll(scrollState)
+            .background(Color.Transparent),
         factory = { context ->
             WebView(context).apply {
                 webViewClient = WebViewClient()
@@ -214,6 +223,8 @@ fun ForceResizeContent(content: @Composable () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .aspectRatio(9f / 16f)
+            .safeDrawingPadding()
+            .background(Color.Transparent)
     ) {
         content()
     }
