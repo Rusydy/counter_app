@@ -1,6 +1,7 @@
 package com.example.counter_app
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
@@ -46,24 +47,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
-const val homePageUrl = "https://detik.com"
+// TODO: ENHANCEMENT! change this URL to display URLs
+const val baseUrl = "https://detik.com"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WebViewLayout() {
     val systemUiController = rememberSystemUiController()
-    systemUiController.isSystemBarsVisible = false // Status & Navigation bars
+    systemUiController.isSystemBarsVisible = false
     systemUiController.navigationBarDarkContentEnabled = true
 
     var popUpVisible by remember { mutableStateOf(false) }
+    var isHomeVisible by remember { mutableStateOf(true) }
     var hitCount by remember { mutableStateOf(0) }
 
-    var tokenText by remember { mutableStateOf("") } // Create a mutableState for the token text
+    var tokenText by remember { mutableStateOf("") }
+    var homePageUrl by remember { mutableStateOf(baseUrl) }
 
-    // TODO: Implement this on CA-2
-    var isHomeVisible by remember { mutableStateOf(true) }
-
-    // Reference to the WebView component
     var webView: WebView? = null
 
     Column(
@@ -75,7 +75,6 @@ fun WebViewLayout() {
                 .fillMaxWidth()
                 .weight(1f)
                 .background(Color.Transparent),
-                // TODO: adjust the .pointerInput to detect the scroll gesture and hide the home button on CA-2
             contentAlignment = Alignment.Center
         ) {
             Box(
@@ -83,7 +82,6 @@ fun WebViewLayout() {
                     .fillMaxSize()
             ) {
 
-                // Pass a reference to the WebView
                 WebViewComponent(homePageUrl) { webViewInstance ->
                     webView = webViewInstance
                 }
@@ -112,8 +110,18 @@ fun WebViewLayout() {
                 ) {
                     IconButton(
                         onClick = {
+                            Log.d("token on homePageUrl", homePageUrl)
+//                          TODO: ISSUE! after token inputted, the home button is not working properly
                             hitCount = 0
-                            webView?.loadUrl(homePageUrl) // Load the home page URL
+                            popUpVisible = false
+                            val enteredToken = tokenText
+                            if (enteredToken.isNotEmpty()) {
+                                homePageUrl = "$baseUrl/$enteredToken"
+                                Log.d("token on HOME", homePageUrl)
+                                webView?.loadUrl(homePageUrl)
+                            }
+                            webView?.loadUrl(baseUrl)
+
                         },
                         modifier = Modifier
                             .size(48.dp)
@@ -135,8 +143,6 @@ fun WebViewLayout() {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // TODO: Fix this button on CA-2
-            // Hidden button that triggers the pop-up
             Button(
                 onClick = {
                     popUpVisible = true
@@ -150,7 +156,6 @@ fun WebViewLayout() {
         }
     }
 
-    // Show the pop-up when popUpVisible is true
     if (popUpVisible) {
         AlertDialog(
             onDismissRequest = {
@@ -164,7 +169,6 @@ fun WebViewLayout() {
                     Text(text = "This is your pop-up content.")
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // TextField for entering the token
                     TextField(
                         value = tokenText,
                         onValueChange = { newValue ->
@@ -181,8 +185,12 @@ fun WebViewLayout() {
                     onClick = {
                         hitCount = 0
                         popUpVisible = false
-                        val enteredToken = tokenText // Get the entered token here
-                        // TODO: implement Dynamic WebView Content Based on enteredToken
+                        val enteredToken = tokenText 
+                        if (enteredToken.isNotEmpty()) {
+                            homePageUrl = "$baseUrl/$enteredToken"
+                            Log.d("token on SUBMIT", homePageUrl)
+                            webView?.loadUrl(homePageUrl)
+                        }
                     }
                 ) {
                     Text(text = "SUBMIT")
@@ -213,6 +221,9 @@ private fun WebViewComponent(
                 settings.mediaPlaybackRequiresUserGesture = false
                 onWebViewReady(this) // Pass the WebView instance
             }
+        },
+        update = { view ->
+            view.loadUrl(url)
         }
     )
 }
