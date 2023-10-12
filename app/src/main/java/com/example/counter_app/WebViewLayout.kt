@@ -2,6 +2,9 @@ package com.example.counter_app
 
 import android.annotation.SuppressLint
 import android.util.Log
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
@@ -50,7 +53,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 // TODO: ENHANCEMENT! change this URL to display URLs
-const val baseUrl = "https://detik.com"
+//const val baseUrl = "https://detik.com"
+const val baseUrl = "https://www.youtube.com/watch?v=DkC7P9ijL5I" // testing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -217,9 +221,32 @@ private fun WebViewComponent(
             .background(Color.Transparent),
         factory = { context ->
             WebView(context).apply {
-                webViewClient = WebViewClient()
+                webViewClient = object : WebViewClient() {
+                    override fun onReceivedError(
+                        view: WebView?,
+                        request: WebResourceRequest?,
+                        error: WebResourceError?
+                    ) {
+                        // Handle error
+                        Log.d("WebViewError", "Error: $error")
+                    }
+
+                    override fun onReceivedHttpError(
+                        view: WebView?,
+                        request: WebResourceRequest?,
+                        errorResponse: WebResourceResponse?
+                    ) {
+                        // Handle HTTP error
+                        Log.d("WebViewError", "HTTP Error: $errorResponse")
+                    }
+                }
                 loadUrl(url)
                 settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
+                settings.allowFileAccess = true
+                settings.allowContentAccess = true
+                settings.allowFileAccessFromFileURLs = true
+                settings.allowUniversalAccessFromFileURLs = true
                 settings.mediaPlaybackRequiresUserGesture = false
                 settings.useWideViewPort = true
                 settings.loadWithOverviewMode = true
@@ -231,6 +258,7 @@ private fun WebViewComponent(
         }
     )
 }
+
 
 @Composable
 fun ForceResizeContent(screenWidth: Dp, screenHeight: Dp, content: @Composable () -> Unit) {
