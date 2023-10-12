@@ -41,8 +41,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -229,11 +231,13 @@ private fun WebViewComponent(
 }
 
 @Composable
-fun ForceResizeContent(content: @Composable () -> Unit) {
+fun ForceResizeContent(screenWidth: Dp, screenHeight: Dp, content: @Composable () -> Unit) {
+    val aspectRatio = screenWidth.value / screenHeight.value
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .aspectRatio(9f / 16f)
+            .size(screenWidth, screenHeight)
+            .aspectRatio(aspectRatio)
+            .padding(0.dp)
             .safeDrawingPadding()
             .background(Color.Transparent)
     ) {
@@ -243,8 +247,16 @@ fun ForceResizeContent(content: @Composable () -> Unit) {
 
 @Composable
 fun OptimizedAppLayout() {
-    ForceResizeContent {
-        WebViewLayout()
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        ForceResizeContent(screenWidth, screenHeight) {
+            WebViewLayout()
+        }
     }
 }
 
