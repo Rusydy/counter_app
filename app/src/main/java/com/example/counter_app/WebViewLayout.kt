@@ -221,6 +221,8 @@ private fun WebViewComponent(
                 loadUrl(url)
                 settings.javaScriptEnabled = true
                 settings.mediaPlaybackRequiresUserGesture = false
+                settings.useWideViewPort = true
+                settings.loadWithOverviewMode = true
                 onWebViewReady(this) // Pass the WebView instance
             }
         },
@@ -232,14 +234,9 @@ private fun WebViewComponent(
 
 @Composable
 fun ForceResizeContent(screenWidth: Dp, screenHeight: Dp, content: @Composable () -> Unit) {
-    val aspectRatio = screenWidth.value / screenHeight.value
     Box(
         modifier = Modifier
             .size(screenWidth, screenHeight)
-            .aspectRatio(aspectRatio)
-            .padding(0.dp)
-            .safeDrawingPadding()
-            .background(Color.Transparent)
     ) {
         content()
     }
