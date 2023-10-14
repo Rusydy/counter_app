@@ -239,17 +239,6 @@ private fun WebViewComponent(
     )
 }
 
-
-@Composable
-fun ForceResizeContent(screenWidth: Dp, screenHeight: Dp, content: @Composable () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(screenWidth, screenHeight)
-    ) {
-        content()
-    }
-}
-
 @Composable
 fun OptimizedAppLayout() {
     val configuration = LocalConfiguration.current
@@ -257,11 +246,9 @@ fun OptimizedAppLayout() {
     val screenHeight = configuration.screenHeightDp.dp
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().size(screenWidth, screenHeight)
     ) {
-        ForceResizeContent(screenWidth, screenHeight) {
-            WebViewLayout()
-        }
+        WebViewLayout()
     }
 }
 
