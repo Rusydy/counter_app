@@ -142,24 +142,6 @@ fun WebViewLayout() {
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Button(
-                onClick = {
-                    popUpVisible = true
-                },
-                modifier = Modifier
-                    .size(0.dp)
-                    .background(Color.Transparent)
-            ) {
-                Text(text = "Hidden Button")
-            }
-        }
     }
 
     if (popUpVisible) {
