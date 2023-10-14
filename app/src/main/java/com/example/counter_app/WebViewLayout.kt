@@ -194,12 +194,10 @@ private fun WebViewComponent(
     url: String,
     onWebViewReady: (WebView) -> Unit
 ) {
-    val scrollState = rememberScrollState()
-
+    val scrollState = rememberScrollState(0)
     AndroidView(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(scrollState)
             .background(Color.Transparent),
         factory = { context ->
             WebView(context).apply {
