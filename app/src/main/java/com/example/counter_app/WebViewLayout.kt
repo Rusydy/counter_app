@@ -114,14 +114,13 @@ fun WebViewLayout() {
 //                          TODO: ISSUE! after token inputted, the home button is not working properly
                             hitCount = 0
                             popUpVisible = false
-                            val enteredToken = tokenText
-                            if (enteredToken.isNotEmpty()) {
-                                homePageUrl = "$baseUrl/$enteredToken"
-                                Log.d("token on HOME", homePageUrl)
-                                webView?.loadUrl(homePageUrl)
+                            homePageUrl = ""
+                            homePageUrl = if (tokenText.isNotEmpty()) {
+                                "$baseUrl/$tokenText"
+                            } else {
+                                baseUrl
                             }
-                            webView?.loadUrl(baseUrl)
-
+                            webView?.loadUrl(homePageUrl)
                         },
                         modifier = Modifier
                             .size(48.dp)
@@ -167,12 +166,13 @@ fun WebViewLayout() {
                     onClick = {
                         hitCount = 0
                         popUpVisible = false
-                        val enteredToken = tokenText 
-                        if (enteredToken.isNotEmpty()) {
-                            homePageUrl = "$baseUrl/$enteredToken"
-                            Log.d("token on SUBMIT", homePageUrl)
-                            webView?.loadUrl(homePageUrl)
+                        val enteredToken = tokenText
+                        homePageUrl = if (enteredToken.isNotEmpty()) {
+                            "$baseUrl/$enteredToken"
+                        } else {
+                            baseUrl
                         }
+                        webView?.loadUrl(homePageUrl)
                     }
                 ) {
                     Text(text = "SUBMIT")
