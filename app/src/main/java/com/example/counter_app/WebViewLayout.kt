@@ -138,10 +138,10 @@ fun WebViewLayout() {
         }
     }
 
-    if (tokenText.isEmpty() || popUpVisible) {
+    if (homePageUrl == baseUrl || popUpVisible){
         AlertDialog(
             onDismissRequest = {
-                popUpVisible = false
+                popUpVisible = true
             },
             title = {
                 Text(text = "Pop-up Content", fontWeight = FontWeight.Bold)
