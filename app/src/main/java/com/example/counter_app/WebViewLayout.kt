@@ -47,8 +47,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 // TODO: ENHANCEMENT! change this URL to display URLs
-//const val baseUrl = "https://detik.com"
-const val baseUrl = "https://www.youtube.com/watch?v=DkC7P9ijL5I" // testing
+const val baseUrl = "https://detik.com"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,12 +105,11 @@ fun WebViewLayout() {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
+                        .padding(16.dp),
+                    contentAlignment = Alignment.BottomStart
                 ) {
                     IconButton(
                         onClick = {
-                            Log.d("token on homePageUrl", homePageUrl)
-//                          TODO: ISSUE! after token inputted, the home button is not working properly
                             hitCount = 0
                             popUpVisible = false
                             homePageUrl = ""
@@ -124,7 +122,6 @@ fun WebViewLayout() {
                         },
                         modifier = Modifier
                             .size(48.dp)
-                            .align(Alignment.BottomStart)
                             .border(1.dp, Color.White, CircleShape)
                     ) {
                         Icon(
@@ -137,7 +134,7 @@ fun WebViewLayout() {
         }
     }
 
-    if (homePageUrl == baseUrl || popUpVisible){
+    if (homePageUrl == baseUrl || popUpVisible) {
         AlertDialog(
             onDismissRequest = {
                 popUpVisible = true
@@ -149,7 +146,7 @@ fun WebViewLayout() {
                 Column {
                     Text(text = "This is your pop-up content.")
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     TextField(
                         value = tokenText,
                         onValueChange = { newValue ->
@@ -188,11 +185,9 @@ private fun WebViewComponent(
     url: String,
     onWebViewReady: (WebView) -> Unit
 ) {
-    val scrollState = rememberScrollState(0)
+    rememberScrollState(0)
     AndroidView(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Transparent),
+        modifier = Modifier.fillMaxSize().background(Color.Transparent),
         factory = { context ->
             WebView(context).apply {
                 webViewClient = object : WebViewClient() {
