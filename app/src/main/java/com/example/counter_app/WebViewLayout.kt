@@ -138,7 +138,7 @@ fun WebViewLayout() {
         }
     }
 
-    if (popUpVisible) {
+    if (tokenText.isEmpty() || popUpVisible) {
         AlertDialog(
             onDismissRequest = {
                 popUpVisible = false
