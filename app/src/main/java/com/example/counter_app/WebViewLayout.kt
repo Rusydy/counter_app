@@ -57,7 +57,7 @@ fun WebViewLayout() {
     systemUiController.navigationBarDarkContentEnabled = true
 
     var popUpVisible by remember { mutableStateOf(false) }
-    var isHomeVisible by remember { mutableStateOf(true) }
+    // var isHomeVisible by remember { mutableStateOf(true) }
     var hitCount by remember { mutableStateOf(0) }
 
     var tokenText by remember { mutableStateOf("") }
@@ -101,11 +101,11 @@ fun WebViewLayout() {
                 )
             }
 
-            if (isHomeVisible) {
+            // if (isHomeVisible) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp),
+                        .padding(10.dp, 0.dp, 0.dp, 50.dp),
                     contentAlignment = Alignment.BottomStart
                 ) {
                     IconButton(
@@ -130,7 +130,7 @@ fun WebViewLayout() {
                         )
                     }
                 }
-            }
+            // }
         }
     }
 
