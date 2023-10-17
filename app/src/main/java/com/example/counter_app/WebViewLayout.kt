@@ -31,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,13 +58,12 @@ fun WebViewLayout() {
     systemUiController.navigationBarDarkContentEnabled = true
 
     var popUpVisible by remember { mutableStateOf(false) }
-    // var isHomeVisible by remember { mutableStateOf(true) }
     var hitCount by remember { mutableStateOf(0) }
 
     var tokenText by remember { mutableStateOf("") }
     var homePageUrl by remember { mutableStateOf(baseUrl) }
 
-    var webView: WebView? = null
+    val webViewState = remember { mutableStateOf<WebView?>(null) }
 
     Column(
         modifier = Modifier
@@ -80,10 +80,13 @@ fun WebViewLayout() {
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-
-                WebViewComponent(homePageUrl) { webViewInstance ->
-                    webView = webViewInstance
-                }
+                WebViewComponent(
+                    url = homePageUrl,
+                    onWebViewReady = { webViewInstance ->
+                        webViewInstance
+                    },
+                    webViewState = webViewState
+                )
 
                 Box(
                     modifier = Modifier
@@ -101,7 +104,6 @@ fun WebViewLayout() {
                 )
             }
 
-            // if (isHomeVisible) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -112,13 +114,8 @@ fun WebViewLayout() {
                         onClick = {
                             hitCount = 0
                             popUpVisible = false
-                            homePageUrl = ""
-                            homePageUrl = if (tokenText.isNotEmpty()) {
-                                "$baseUrl/$tokenText"
-                            } else {
-                                baseUrl
-                            }
-                            webView?.loadUrl(homePageUrl)
+                            homePageUrl = "$baseUrl/$tokenText"
+                            webViewState.value?.loadUrl(homePageUrl)
                         },
                         modifier = Modifier
                             .size(48.dp)
@@ -130,7 +127,6 @@ fun WebViewLayout() {
                         )
                     }
                 }
-            // }
         }
     }
 
@@ -163,13 +159,8 @@ fun WebViewLayout() {
                     onClick = {
                         hitCount = 0
                         popUpVisible = false
-                        val enteredToken = tokenText
-                        homePageUrl = if (enteredToken.isNotEmpty()) {
-                            "$baseUrl/$enteredToken"
-                        } else {
-                            baseUrl
-                        }
-                        webView?.loadUrl(homePageUrl)
+                        homePageUrl = "$baseUrl/$tokenText"
+                        webViewState.value?.loadUrl(homePageUrl)
                     }
                 ) {
                     Text(text = "SUBMIT")
@@ -183,7 +174,8 @@ fun WebViewLayout() {
 @Composable
 private fun WebViewComponent(
     url: String,
-    onWebViewReady: (WebView) -> Unit
+    onWebViewReady: (WebView) -> Unit,
+    webViewState: MutableState<WebView?>
 ) {
     rememberScrollState(0)
     AndroidView(
@@ -210,6 +202,7 @@ private fun WebViewComponent(
                     }
                 }
                 loadUrl(url)
+                setInitialScale(60)
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
                 settings.allowFileAccess = true
@@ -220,6 +213,7 @@ private fun WebViewComponent(
                 settings.useWideViewPort = true
                 settings.loadWithOverviewMode = true
                 onWebViewReady(this) // Pass the WebView instance
+                webViewState.value = this // Update the WebView state
             }
         },
         update = { view ->
