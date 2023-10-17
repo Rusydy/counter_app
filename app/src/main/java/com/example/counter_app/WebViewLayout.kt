@@ -46,6 +46,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import android.os.CountDownTimer
+import androidx.compose.runtime.DisposableEffect
 
 // TODO: ENHANCEMENT! change this URL to display URLs
 const val baseUrl = "https://detik.com"
@@ -64,6 +66,32 @@ fun WebViewLayout() {
     var homePageUrl by remember { mutableStateOf(baseUrl) }
 
     val webViewState = remember { mutableStateOf<WebView?>(null) }
+
+    var countDownTimer: CountDownTimer? by remember { mutableStateOf(null) }
+
+    DisposableEffect(Unit) {
+        val timer = object : CountDownTimer(15 * 60 * 1000, 1000) { // 15 minutes in milliseconds
+            override fun onTick(millisUntilFinished: Long) {
+                // Countdown in progress
+            }
+
+            override fun onFinish() {
+                // Timer has finished, navigate back to homePageUrl
+                hitCount = 0
+                popUpVisible = false
+                homePageUrl = "$baseUrl/$tokenText"
+                Log.d("Timer", "Timer has finished, returning to homePageUrl")
+                webViewState.value?.loadUrl(homePageUrl)
+            }
+        }
+
+        timer.start()
+        countDownTimer = timer
+
+        onDispose {
+            countDownTimer?.cancel()
+        }
+    }
 
     Column(
         modifier = Modifier
