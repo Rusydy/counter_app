@@ -1,6 +1,8 @@
 package com.example.counter_app
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -48,6 +50,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import android.os.CountDownTimer
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
 
 // TODO: ENHANCEMENT! change this URL to display URLs
 const val baseUrl = "https://detik.com"
@@ -62,7 +65,9 @@ fun WebViewLayout() {
     var popUpVisible by remember { mutableStateOf(false) }
     var hitCount by remember { mutableStateOf(0) }
 
-    var tokenText by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val sharedPreferences = getSharedPreferences(context)
+    var tokenText by remember { mutableStateOf(getTokenFromSharedPreferences(sharedPreferences)) }
     var homePageUrl by remember { mutableStateOf(baseUrl) }
 
     val webViewState = remember { mutableStateOf<WebView?>(null) }
@@ -109,7 +114,7 @@ fun WebViewLayout() {
                     .fillMaxSize()
             ) {
                 WebViewComponent(
-                    url = homePageUrl,
+                    url = "$baseUrl/$tokenText",
                     onWebViewReady = { webViewInstance ->
                         webViewInstance
                     },
@@ -158,7 +163,7 @@ fun WebViewLayout() {
         }
     }
 
-    if (homePageUrl == baseUrl || popUpVisible) {
+    if (popUpVisible) {
         AlertDialog(
             onDismissRequest = {
                 popUpVisible = true
@@ -175,6 +180,7 @@ fun WebViewLayout() {
                         value = tokenText,
                         onValueChange = { newValue ->
                             tokenText = newValue
+                            saveTokenToSharedPreferences(sharedPreferences, newValue)
                         },
                         modifier = Modifier.fillMaxWidth().imePadding(),
                         label = { Text("Enter Token") }
@@ -196,6 +202,20 @@ fun WebViewLayout() {
             }
         )
     }
+}
+
+private fun getSharedPreferences(context: Context): SharedPreferences {
+    return context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+}
+
+private fun saveTokenToSharedPreferences(sharedPreferences: SharedPreferences, token: String) {
+    val editor = sharedPreferences.edit()
+    editor.putString("token", token)
+    editor.apply()
+}
+
+private fun getTokenFromSharedPreferences(sharedPreferences: SharedPreferences): String {
+    return sharedPreferences.getString("token", "") ?: ""
 }
 
 @SuppressLint("SetJavaScriptEnabled")
