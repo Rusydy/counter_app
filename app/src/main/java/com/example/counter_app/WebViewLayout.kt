@@ -51,6 +51,11 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import android.os.CountDownTimer
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
 
 // TODO: ENHANCEMENT! change this URL to display URLs
 const val baseUrl = "https://detik.com"
@@ -182,25 +187,47 @@ fun WebViewLayout() {
                             tokenText = newValue
                             saveTokenToSharedPreferences(sharedPreferences, newValue)
                         },
-                        modifier = Modifier.fillMaxWidth().imePadding(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .imePadding(),
                         label = { Text("Enter Token") }
                     )
                 }
             },
 
             confirmButton = {
-                Button(
-                    onClick = {
-                        hitCount = 0
-                        popUpVisible = false
-                        homePageUrl = "$baseUrl/$tokenText"
-                        webViewState.value?.loadUrl(homePageUrl)
+                Row() {
+                    Button(
+                        onClick = {
+                            hitCount = 0
+                            popUpVisible = false
+                            homePageUrl = "$baseUrl/$tokenText"
+                            webViewState.value?.loadUrl(homePageUrl)
+                        }
+                    ) {
+                        Text(text = "SUBMIT")
                     }
-                ) {
-                    Text(text = "SUBMIT")
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    SettingsButton()
                 }
             }
         )
+    }
+}
+
+@Composable
+fun SettingsButton() {
+    val context = LocalContext.current
+    val intent = Intent(Settings.ACTION_SETTINGS)
+
+    Button(
+        onClick = {
+            context.startActivity(intent)
+        }
+    ) {
+        Text(text = "SETTINGS")
     }
 }
 
@@ -227,7 +254,9 @@ private fun WebViewComponent(
 ) {
     rememberScrollState(0)
     AndroidView(
-        modifier = Modifier.fillMaxSize().background(Color.Transparent),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Transparent),
         factory = { context ->
             WebView(context).apply {
                 webViewClient = object : WebViewClient() {
@@ -277,7 +306,9 @@ fun OptimizedAppLayout() {
     val screenHeight = configuration.screenHeightDp.dp
 
     Box(
-        modifier = Modifier.fillMaxSize().size(screenWidth, screenHeight)
+        modifier = Modifier
+            .fillMaxSize()
+            .size(screenWidth, screenHeight)
     ) {
         WebViewLayout()
     }
