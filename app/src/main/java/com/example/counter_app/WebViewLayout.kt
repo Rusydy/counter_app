@@ -103,6 +103,8 @@ fun WebViewLayout() {
         }
     }
 
+    var passwordDialogVisible by remember { mutableStateOf(true) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -135,7 +137,7 @@ fun WebViewLayout() {
                             detectTapGestures {
                                 hitCount++
                                 if (hitCount >= 5) {
-                                    popUpVisible = true
+                                    passwordDialogVisible = true
                                 }
                             }
                         }
@@ -168,7 +170,20 @@ fun WebViewLayout() {
         }
     }
 
-    if (popUpVisible) {
+    if (hitCount >= 5){
+        PasswordInputDialog(
+            onPasswordCorrect = {
+                passwordDialogVisible = false
+                popUpVisible = true
+            },
+            onPasswordIncorrect = {
+                popUpVisible = false
+                passwordDialogVisible = true
+            }
+        )
+    }
+
+    if (popUpVisible && !passwordDialogVisible){
         AlertDialog(
             onDismissRequest = {
                 popUpVisible = true
@@ -215,6 +230,57 @@ fun WebViewLayout() {
             }
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PasswordInputDialog(
+    onPasswordCorrect: () -> Unit,
+    onPasswordIncorrect: () -> Unit,
+) {
+    var password by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = {
+            // Dismiss the dialog when the user clicks outside the dialog or on the back
+            // button. If you want to disable that functionality, simply use an empty
+            // onCloseRequest.
+        },
+        title = {
+            Text(text = "Password", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column {
+                Text(text = "Enter your password.")
+                Spacer(modifier = Modifier.height(16.dp))
+
+                TextField(
+                    value = password,
+                    onValueChange = { newValue ->
+                        password = newValue
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .imePadding(),
+                    label = { Text("Enter Password") }
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (password == "123") {
+                        onPasswordCorrect()
+                    } else {
+                        onPasswordIncorrect()
+                    }
+                }
+            ) {
+                Text(text = "SUBMIT")
+            }
+        }
+    
+    )
 }
 
 @Composable
