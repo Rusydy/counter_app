@@ -345,7 +345,12 @@ private fun WebViewComponent(
                     }
                 }
                 loadUrl(url)
-                setInitialScale(60)
+
+                // Set user agent as desktop
+                settings.userAgentString =
+                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) " +
+                            "Chrome/90.0.4430.212 Safari/537.36"
+
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
                 settings.allowFileAccess = true
