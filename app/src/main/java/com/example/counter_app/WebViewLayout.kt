@@ -147,7 +147,7 @@ fun WebViewLayout() {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(10.dp, 0.dp, 0.dp, 50.dp),
+                        .padding(58.dp, 0.dp, 0.dp, 58.dp),
                     contentAlignment = Alignment.BottomStart
                 ) {
                     IconButton(
@@ -162,6 +162,7 @@ fun WebViewLayout() {
                             .border(1.dp, Color.White, CircleShape)
                     ) {
                         Icon(
+                            modifier = Modifier.size(48.dp),
                             imageVector = Icons.Default.Home,
                             contentDescription = "Home",
                         )
