@@ -345,7 +345,12 @@ private fun WebViewComponent(
                         Log.d("WebViewError", "HTTP Error: $errorResponse")
                     }
                 }
-                loadUrl(url)
+                loadUrl(url).also {
+                    Log.d("WebView", "Loading URL: $url")
+                }
+                setInitialScale(110).also {
+                    Log.d("setInitialScale", "hehe")
+                }
 
                 // Set user agent as desktop
                 settings.userAgentString =
@@ -376,6 +381,9 @@ fun OptimizedAppLayout() {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
+
+    Log.d("screenResolution", screenWidth.toString())
+    Log.d("screenResolution", screenHeight.toString())
 
     Box(
         modifier = Modifier
