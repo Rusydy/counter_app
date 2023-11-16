@@ -171,7 +171,7 @@ fun WebViewLayout() {
         }
     }
 
-    if (hitCount >= 5){
+    if (hitCount >= 5 || tokenText.isEmpty()) {
         PasswordInputDialog(
             onPasswordCorrect = {
                 passwordDialogVisible = false
