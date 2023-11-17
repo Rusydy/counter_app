@@ -54,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.webkit.CookieManager
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 
@@ -332,8 +333,7 @@ private fun WebViewComponent(
                         request: WebResourceRequest?,
                         error: WebResourceError?
                     ) {
-                        // Handle error
-                        Log.d("WebViewError", "Error: $error")
+                        handleWebViewError(this@apply)
                     }
 
                     override fun onReceivedHttpError(
@@ -341,15 +341,14 @@ private fun WebViewComponent(
                         request: WebResourceRequest?,
                         errorResponse: WebResourceResponse?
                     ) {
-                        // Handle HTTP error
-                        Log.d("WebViewError", "HTTP Error: $errorResponse")
+                        handleWebViewHttpError(this@apply)
                     }
                 }
                 loadUrl(url).also {
                     Log.d("WebView", "Loading URL: $url")
                 }
                 setInitialScale(110).also {
-                    Log.d("setInitialScale", "hehe")
+                    Log.d("WebView", "setInitialScale(110)")
                 }
 
                 // Set user agent as desktop
@@ -374,6 +373,46 @@ private fun WebViewComponent(
             view.loadUrl(url)
         }
     )
+}
+
+private fun handleWebViewError(webView: WebView) {
+    Log.d("WebView", "Error loading URL: ${webView.url}")
+
+    var currentToken = clearWebViewCacheExceptCurrentToken(webView)
+    webView.loadUrl("$baseUrl/$currentToken")
+}
+
+private fun handleWebViewHttpError(webView: WebView) {
+    Log.d("WebView", "HTTP Error loading URL: ${webView.url}")
+    
+    var currentToken = clearWebViewCacheExceptCurrentToken(webView)
+    webView.loadUrl("$baseUrl/$currentToken")
+}
+
+private fun clearWebViewCacheExceptCurrentToken(webView: WebView) : String {
+    // get current token
+    val currentToken = webView.url?.substringAfterLast("/")
+
+    // clear cache
+    webView.clearCache(true)
+    webView.clearHistory()
+    webView.clearFormData()
+    webView.clearSslPreferences()
+    webView.clearMatches()
+    webView.clearDisappearingChildren()
+    CookieManager.getInstance().removeAllCookies(null)
+    CookieManager.getInstance().flush()
+    webView.clearCache(true)
+
+    // clear all shared preferences
+    val sharedPreferences = getSharedPreferences(webView.context)
+    sharedPreferences.edit().clear().apply()
+
+    // save current token to shared preferences
+    saveTokenToSharedPreferences(sharedPreferences, currentToken ?: "")
+
+    // return current token
+    return currentToken ?: ""
 }
 
 @Composable
