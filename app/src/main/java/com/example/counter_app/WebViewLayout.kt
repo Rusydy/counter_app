@@ -90,7 +90,9 @@ fun WebViewLayout() {
                 // Timer has finished, navigate back to homePageUrl
                 hitCount = 0
                 popUpVisible = false
-                homePageUrl = "$baseUrl/$tokenText"
+
+                var currentToken = clearWebViewCacheExceptCurrentToken(webViewState.value!!)
+                homePageUrl = "$baseUrl/$currentToken"
                 Log.d("Timer", "Timer has finished, returning to homePageUrl")
                 webViewState.value?.loadUrl(homePageUrl)
             }
