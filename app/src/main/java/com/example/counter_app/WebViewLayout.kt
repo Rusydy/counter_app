@@ -52,7 +52,6 @@ import android.os.CountDownTimer
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
-import android.net.Uri
 import android.provider.Settings
 import android.webkit.CookieManager
 import androidx.compose.foundation.layout.Row
@@ -60,6 +59,11 @@ import androidx.compose.foundation.layout.width
 
 // TODO: ENHANCEMENT! change this URL to display URLs
 const val baseUrl = "https://detik.com"
+
+var loadWebView = true
+var needReload = false
+var reloadWebView = 0
+var exitApp = false
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,6 +78,8 @@ fun WebViewLayout() {
     val context = LocalContext.current
     val sharedPreferences = getSharedPreferences(context)
     var tokenText by remember { mutableStateOf(getTokenFromSharedPreferences(sharedPreferences)) }
+    Log.d("WebView", "tokenText: $tokenText")
+
     var homePageUrl by remember { mutableStateOf(baseUrl) }
 
     val webViewState = remember { mutableStateOf<WebView?>(null) }
@@ -84,6 +90,7 @@ fun WebViewLayout() {
         val timer = object : CountDownTimer(15 * 60 * 1000, 1000) { // 15 minutes in milliseconds
             override fun onTick(millisUntilFinished: Long) {
                 // Countdown in progress
+                Log.d("Timer", "Countdown in progress: ${millisUntilFinished / 1000}")
             }
 
             override fun onFinish() {
@@ -123,13 +130,35 @@ fun WebViewLayout() {
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                WebViewComponent(
-                    url = "$baseUrl/$tokenText",
-                    onWebViewReady = { webViewInstance ->
-                        webViewInstance
-                    },
-                    webViewState = webViewState
-                )
+                if (loadWebView){
+                    if (tokenText.isEmpty()) {
+                        hitCount = 5
+                    }
+
+                    if (homePageUrl == "$baseUrl" && tokenText.isNotEmpty()){
+                        homePageUrl = "$baseUrl/$tokenText"
+                    }
+
+                    WebViewComponent(
+                        url = homePageUrl,
+                        onWebViewReady = {
+                            Log.d("WebView", "WebView ready with url: ${it.url}")
+                        },
+                        webViewState = webViewState
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.White)
+                    ) {
+                        Text(
+                            text = "Loading... Wait for a token.",
+                            modifier = Modifier.align(Alignment.TopCenter).padding(0.dp, 30.dp, 0.dp, 0.dp)
+                        )
+                    }
+                    hitCount = 5
+                }
 
                 Box(
                     modifier = Modifier
@@ -156,9 +185,9 @@ fun WebViewLayout() {
                     IconButton(
                         onClick = {
                             hitCount = 0
+                            reloadWebView = 0
                             popUpVisible = false
-                            homePageUrl = "$baseUrl/$tokenText"
-                            webViewState.value?.loadUrl(homePageUrl)
+                            webViewState.value?.loadUrl("$baseUrl/$tokenText")
                         },
                         modifier = Modifier
                             .size(48.dp)
@@ -174,7 +203,7 @@ fun WebViewLayout() {
         }
     }
 
-    if (hitCount >= 5 || tokenText.isEmpty()) {
+    if (hitCount > 5 || tokenText.isEmpty()) {
         PasswordInputDialog(
             onPasswordCorrect = {
                 passwordDialogVisible = false
@@ -204,7 +233,7 @@ fun WebViewLayout() {
                         value = tokenText,
                         onValueChange = { newValue ->
                             tokenText = newValue
-                            saveTokenToSharedPreferences(sharedPreferences, newValue)
+                            saveTokenToSharedPreferences(sharedPreferences, tokenText)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -219,9 +248,15 @@ fun WebViewLayout() {
                     Button(
                         onClick = {
                             hitCount = 0
+                            reloadWebView = 0
                             popUpVisible = false
-                            homePageUrl = "$baseUrl/$tokenText"
-                            webViewState.value?.loadUrl(homePageUrl)
+                            loadWebView = true
+                            
+                            webViewState.value?.loadUrl("$baseUrl/${
+                                getTokenFromSharedPreferences(
+                                    sharedPreferences
+                                )
+                            }")
                         }
                     ) {
                         Text(text = "SUBMIT")
@@ -231,6 +266,31 @@ fun WebViewLayout() {
 
                     SettingsButton()
                 }
+            }
+        )
+    }
+
+    if (reloadWebView >= 10) {
+        exitApp = true
+    }
+
+    if (exitApp) {
+        loadWebView = false
+        AlertDialog(
+            onDismissRequest = {
+                reloadWebView = 0
+            },
+            title = {
+                Text(text = "Error", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Column {
+                    Text(text = "There was an error loading the page. Please check your internet connection and try again.")
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            },
+            confirmButton = {
+                SettingsButton()
             }
         )
     }
@@ -333,9 +393,22 @@ private fun WebViewComponent(
                     override fun onReceivedError(
                         view: WebView?,
                         request: WebResourceRequest?,
-                        error: WebResourceError?
+                        error: WebResourceError?,
                     ) {
-                        handleWebViewError(this@apply)
+                        Log.e("WebView", "Error loading URL: ${request?.url}")
+                        Log.d("WebView", "Error description: ${error?.description}")
+
+                        if (reloadWebView >= 5) {
+                            needReload = true
+                        }
+
+                        if (needReload) {
+                            var currentToken = view?.let { clearWebViewCacheExceptCurrentToken(it) }
+                            view?.loadUrl("$baseUrl/$currentToken")
+
+                            reloadWebView++
+                            Log.d("WebView", "reloadWebView onReceivedError: $reloadWebView")
+                        }
                     }
 
                     override fun onReceivedHttpError(
@@ -343,7 +416,19 @@ private fun WebViewComponent(
                         request: WebResourceRequest?,
                         errorResponse: WebResourceResponse?
                     ) {
-                        handleWebViewHttpError(this@apply)
+                        Log.d("Webview errorResponse", errorResponse.toString())
+
+                        if (reloadWebView >= 5) {
+                            needReload = true
+                        }
+
+                        if (needReload) {
+                            var currentToken = view?.let { clearWebViewCacheExceptCurrentToken(it) }
+                            view?.loadUrl("$baseUrl/$currentToken")
+
+                            reloadWebView++
+                            Log.d("WebView", "reloadWebView onReceivedHttpError: $reloadWebView")
+                        }
                     }
                 }
                 loadUrl(url).also {
@@ -377,23 +462,11 @@ private fun WebViewComponent(
     )
 }
 
-private fun handleWebViewError(webView: WebView) {
-    Log.d("WebView", "Error loading URL: ${webView.url}")
-
-    var currentToken = clearWebViewCacheExceptCurrentToken(webView)
-    webView.loadUrl("$baseUrl/$currentToken")
-}
-
-private fun handleWebViewHttpError(webView: WebView) {
-    Log.d("WebView", "HTTP Error loading URL: ${webView.url}")
-    
-    var currentToken = clearWebViewCacheExceptCurrentToken(webView)
-    webView.loadUrl("$baseUrl/$currentToken")
-}
-
 private fun clearWebViewCacheExceptCurrentToken(webView: WebView) : String {
     // get current token
-    val currentToken = webView.url?.substringAfterLast("/")
+    val sharedPreferences = getSharedPreferences(webView.context)
+    var currentToken = getTokenFromSharedPreferences(sharedPreferences)
+    Log.d("WebView", "currentToken: $currentToken")
 
     // clear cache
     webView.clearCache(true)
@@ -407,8 +480,8 @@ private fun clearWebViewCacheExceptCurrentToken(webView: WebView) : String {
     webView.clearCache(true)
 
     // clear all shared preferences
-    val sharedPreferences = getSharedPreferences(webView.context)
     sharedPreferences.edit().clear().apply()
+    Log.d("WebView", "sharedPreferences cleared with current token: $currentToken")
 
     // save current token to shared preferences
     saveTokenToSharedPreferences(sharedPreferences, currentToken ?: "")
