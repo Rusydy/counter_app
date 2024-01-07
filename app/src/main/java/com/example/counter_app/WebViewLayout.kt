@@ -56,9 +56,13 @@ import android.provider.Settings
 import android.webkit.CookieManager
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.semantics.SemanticsProperties.ImeAction
 
 // TODO: ENHANCEMENT! change this URL to display URLs
-const val baseUrl = "https://detik.com"
+const val baseUrl = "https://cms.liharsw.dev/display"
+const val AppPassword = 29603
 
 var loadWebView = true
 var needReload = false
@@ -86,32 +90,47 @@ fun WebViewLayout() {
 
     var countDownTimer: CountDownTimer? by remember { mutableStateOf(null) }
 
-    DisposableEffect(Unit) {
-        val timer = object : CountDownTimer(15 * 60 * 1000, 1000) { // 15 minutes in milliseconds
+    fun startCountdownTimer() {
+        countDownTimer?.cancel()
+
+        val timer = object : CountDownTimer(1 * 60 * 1000, 1000) { // 1 minute in milliseconds
             override fun onTick(millisUntilFinished: Long) {
                 // Countdown in progress
                 Log.d("Timer", "Countdown in progress: ${millisUntilFinished / 1000}")
             }
 
             override fun onFinish() {
-                // Timer has finished, navigate back to homePageUrl
+                // Timer has finished, restart the timer
                 hitCount = 0
                 popUpVisible = false
 
                 var currentToken = clearWebViewCacheExceptCurrentToken(webViewState.value!!)
                 homePageUrl = "$baseUrl/$currentToken"
                 Log.d("Timer", "Timer has finished, returning to homePageUrl")
-                webViewState.value?.loadUrl(homePageUrl)
+
+                try {
+                    webViewState.value?.loadUrl(homePageUrl)
+                } catch (e: Exception) {
+                    Log.e("Timer", "Error reloading page: ${e.message}")
+                }
+
+                startCountdownTimer()
             }
         }
 
         timer.start()
         countDownTimer = timer
+    }
+
+    DisposableEffect(Unit) {
+        startCountdownTimer()
 
         onDispose {
             countDownTimer?.cancel()
         }
     }
+
+
 
     var passwordDialogVisible by remember { mutableStateOf(true) }
 
@@ -238,7 +257,24 @@ fun WebViewLayout() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .imePadding(),
-                        label = { Text("Enter Token") }
+                        label = { Text("Enter Token") },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                hitCount = 0
+                                reloadWebView = 0
+                                popUpVisible = false
+                                loadWebView = true
+
+                                webViewState.value?.loadUrl("$baseUrl/${
+                                    getTokenFromSharedPreferences(
+                                        sharedPreferences
+                                    )
+                                }")
+                            }
+                        )
                     )
                 }
             },
@@ -251,7 +287,7 @@ fun WebViewLayout() {
                             reloadWebView = 0
                             popUpVisible = false
                             loadWebView = true
-                            
+
                             webViewState.value?.loadUrl("$baseUrl/${
                                 getTokenFromSharedPreferences(
                                     sharedPreferences
@@ -333,7 +369,7 @@ fun PasswordInputDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (password == "123") {
+                    if (password == AppPassword.toString()) {
                         onPasswordCorrect()
                     } else {
                         onPasswordIncorrect()
@@ -430,7 +466,17 @@ private fun WebViewComponent(
                             Log.d("WebView", "reloadWebView onReceivedHttpError: $reloadWebView")
                         }
                     }
+
+                    // override fun onReceivedSslError, ignore certificate errors
+                    override fun onReceivedSslError(
+                        view: WebView?,
+                        handler: android.webkit.SslErrorHandler?,
+                        error: android.net.http.SslError?
+                    ) {
+                        handler?.proceed()
+                    }
                 }
+
                 loadUrl(url).also {
                     Log.d("WebView", "Loading URL: $url")
                 }
